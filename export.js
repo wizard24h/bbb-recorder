@@ -11,8 +11,8 @@ var xvfb        = new Xvfb({
     silent: true,
     xvfb_args: ["-screen", "0", "1280x800x24", "-ac", "-nolisten", "tcp", "-dpi", "96", "+extension", "RANDR"]
 });
-var width       = 1280;
-var height      = 720;
+var width       = 1600;
+var height      = 900;
 var options     = {
   headless: false,
   args: [
@@ -42,7 +42,7 @@ async function main() {
         if(platform == "linux"){
             xvfb.startSync()
         }
-        
+
         var url = process.argv[2];
         if(!url){
             console.warn('URL undefined!');
@@ -116,15 +116,24 @@ async function main() {
         }
 
         await page.waitForSelector('button[class=acorn-play-button]');
-        await page.$eval('#navbar', element => element.style.display = "none");
-        await page.$eval('#copyright', element => element.style.display = "none");
-        await page.$eval('.acorn-controls', element => element.style.opacity = "0");
+        await page.$eval('#navbar', element => element.parentNode.removeChild(element));
+        await page.$eval('#copyright', element => element.parentNode.removeChild(element));
         await page.click('button[class=acorn-play-button]', {waitUntil: 'domcontentloaded'});
 
+
+        // evaluate will run the function in the page context
+        await page.evaluate(() => {
+            window.resizeTo(
+                window.screen.availWidth+1,
+                window.screen.availHeight+1
+            );
+        });
         await page.evaluate((x) => {
+            window.dispatchEvent(new Event('resize'));
             console.log("REC_START");
             window.postMessage({type: 'REC_START'}, '*')
         })
+        await page.$eval('.acorn-controls', element => element.parentNode.removeChild(element));
 
         // Perform any actions that have to be captured in the exported video
         await page.waitFor((duration * 1000))
@@ -157,7 +166,7 @@ async function main() {
 main()
 
 function convertAndCopy(filename){
- 
+
     var copyFromPath = homedir + "/Downloads";
     var copyToPath = config.copyToPath;
     var onlyfileName = filename.split(".webm")
@@ -171,7 +180,7 @@ function convertAndCopy(filename){
 
     console.log(copyTo);
     console.log(copyFrom);
-    
+
     const ls = spawn('ffmpeg',
         [   '-y',
             '-i "' + copyFrom + '"',
@@ -206,7 +215,7 @@ function convertAndCopy(filename){
             fs.unlinkSync(copyFrom);
             console.log('successfully deleted ' + copyFrom);
         }
-       
+
     });
 
 }
