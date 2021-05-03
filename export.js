@@ -51,7 +51,7 @@ async function main() {
             process.exit(1);
         }
         // Verify if recording URL has the correct format
-        var urlRegex = new RegExp('^https?:\\/\\/.*\\/playback\\/presentation\\/2\\.0\\/' + playbackFile + '\\?meetingId=[a-z0-9]{40}-[0-9]{13}');
+        var urlRegex = new RegExp('^https?:\\/\\/.*\\/playback\\/presentation\\/2\\.3\\/' + playbackFile + '[a-z0-9]{40}-[0-9]{13}');
         if(!urlRegex.test(url)){
             console.warn('Invalid recording URL!');
             process.exit(1);
@@ -101,7 +101,11 @@ async function main() {
 
         // Check if recording exists (search "Recording not found" message)
         var loadMsg = await page.evaluate(() => {
-            return document.getElementById("load-msg").textContent;
+            if (document.getElementById("load-msg")) {
+                return document.getElementById("load-msg").textContent;
+            } else {
+                return "";
+            }
         });
         if(loadMsg == "Recording not found"){
             console.warn("Recording not found!");
@@ -110,18 +114,18 @@ async function main() {
 
         // Get recording duration
         var recDuration = await page.evaluate(() => {
-            return document.getElementById("video").duration;
+            return document.getElementById("vjs_video_3_html5_api").duration;
         });
         // If duration was set to 0 or is greater than recDuration, use recDuration value
         if(duration == 0 || duration > recDuration){
             duration = recDuration;
         }
-
-        await page.waitForSelector('button[class=acorn-play-button]');
-        await page.$eval('#navbar', element => element.style.display = "none");
-        await page.$eval('#copyright', element => element.style.display = "none");
-        await page.$eval('.acorn-controls', element => element.style.opacity = "0");
-        await page.click('button[class=acorn-play-button]', {waitUntil: 'domcontentloaded'});
+    
+        await page.waitForSelector('button[class~="vjs-play-control"]');
+        await page.$eval('.top-bar', element => element.style.display = "none");
+        await page.$eval('.bottom-content', element => element.style.display = "none");
+        await page.$eval('.vjs-control-bar', element => element.style.opacity = "0");
+        await page.click('button[class~="vjs-play-control"]', {waitUntil: 'domcontentloaded'});
 
         await page.evaluate((x) => {
             console.log("REC_START");
