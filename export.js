@@ -11,8 +11,8 @@ var xvfb        = new Xvfb({
     silent: true,
     xvfb_args: ["-screen", "0", "1280x800x24", "-ac", "-nolisten", "tcp", "-dpi", "96", "+extension", "RANDR"]
 });
-var width       = 1280;
-var height      = 720;
+var width       = 1600;
+var height      = 900;
 var options     = {
   headless: false,
   args: [
